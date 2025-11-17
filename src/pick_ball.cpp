@@ -76,9 +76,39 @@ int main(int argc, char* argv[])
         "hello_moveit",
         rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
 
+    // --- Fetch robot_description from MoveGroup node ---
+    auto param_client = std::make_shared<rclcpp::SyncParametersClient>(
+        node, "/spot_moveit/move_group" // this is the name of the NODE with the robot_description parameter
+    );
+
+    // Wait until MoveGroup node is up and publishing parameters
+    // while (!param_client->wait_for_service(1)) {
+    //     RCLCPP_INFO(node->get_logger(), "Waiting for /spot_moveit/move_group parameters...");
+    // }
+
+    // Get the URDF string
+    // std::string urdf_string;
+    // try {
+    //     urdf_string = param_client->get_parameter<std::string>("robot_description");
+    //     RCLCPP_INFO(node->get_logger(), "Successfully fetched robot_description");
+    // } catch (const std::exception &e) {
+    //     RCLCPP_ERROR(node->get_logger(), "Failed to get robot_description: %s", e.what());
+    //     return 1;
+    // }
+
+    // // --- Initialize RobotModel
+    // auto robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(
+    //     node,
+    //     urdf_string,
+    // );
+    // moveit::core::RobotModelPtr robot_model = robot_model_loader->getModel();
+
     const std::string planning_group = "arm";
     using moveit::planning_interface::MoveGroupInterface;
     MoveGroupInterface move_group(node, planning_group);
+
+    RCLCPP_INFO(LOGGER, "Press Enter to continue executing");
+
 
     auto get_pose_service = node->create_service<std_srvs::srv::Trigger>(
     "get_current_pose",
