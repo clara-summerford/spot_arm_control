@@ -77,9 +77,9 @@ int main(int argc, char* argv[])
         rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
 
     // --- Fetch robot_description from MoveGroup node ---
-    auto param_client = std::make_shared<rclcpp::SyncParametersClient>(
-        node, "/spot_moveit/move_group" // this is the name of the NODE with the robot_description parameter
-    );
+    // auto param_client = std::make_shared<rclcpp::SyncParametersClient>(
+    //     node, "/spot_moveit/move_group" // this is the name of the NODE with the robot_description parameter
+    // );
 
     // Wait until MoveGroup node is up and publishing parameters
     // while (!param_client->wait_for_service(1)) {
