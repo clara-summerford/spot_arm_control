@@ -37,7 +37,7 @@ def generate_launch_description():
                 # SetParameter(name="octomap_frame", value="spot_nav/map"),
                 Node(
                     package='spot_arm_control',
-                    executable='pick_ball',
+                    executable='drop_ball',
                     # namespace='spot_moveit',
                     output='screen',
                     # remappings=[('/joint_states', '/spot_driver/joint_states')],
