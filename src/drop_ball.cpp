@@ -17,17 +17,15 @@
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("spot_moveit");
 
-#include <std_srvs/srv/trigger.hpp>
-
 bool callTriggerService(const std::string &service_name,
                         rclcpp::Node::SharedPtr caller_logger)
 {
     // separate node for the service client
-    auto client_node = std::make_shared<rclcpp::Node>("gripper_client");
-    auto client = client_node->create_client<std_srvs::srv::Trigger>(service_name);
+    auto temp_node = std::make_shared<rclcpp::Node>("temp_service_client");
+    auto client = temp_node->create_client<std_srvs::srv::Trigger>(service_name);
 
     if (!client->wait_for_service(std::chrono::seconds(2))) {
-        RCLCPP_ERROR(caller_logger->get_logger(),
+        RCLCPP_ERROR(rclcpp::get_logger("spot_moveit"),
                      "Service '%s' not available", service_name.c_str());
         return false;
     }
@@ -35,14 +33,12 @@ bool callTriggerService(const std::string &service_name,
     auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
     auto future = client->async_send_request(request);
 
-    rclcpp::executors::SingleThreadedExecutor exec;
-    exec.add_node(client_node);
+    rclcpp::executors::SingleThreadedExecutor temp_exec;
+    temp_exec.add_node(temp_node);
 
-    if (exec.spin_until_future_complete(future)
-            == rclcpp::FutureReturnCode::SUCCESS)
-    {
+    if (temp_exec.spin_until_future_complete(future) == rclcpp::FutureReturnCode::SUCCESS){
         auto response = future.get();
-        RCLCPP_INFO(caller_logger->get_logger(),
+        RCLCPP_INFO(rclcpp::get_logger("spot_moveit"),
                     "%s response: success=%d, message='%s'",
                     service_name.c_str(),
                     response->success,
@@ -50,30 +46,21 @@ bool callTriggerService(const std::string &service_name,
         return response->success;
     }
 
-    RCLCPP_ERROR(caller_logger->get_logger(),
+    RCLCPP_ERROR(rclcpp::get_logger("spot_moveit"),
                  "Failed to call service '%s'", service_name.c_str());
     return false;
 }
 
-bool openGripper(rclcpp::Node::SharedPtr node){
-    return callTriggerService(
-        "/spot_manipulation_driver/open_gripper",
-        node
-    );
+bool openGripper(){
+    return callTriggerService("/spot_manipulation_driver/open_gripper");
 }
 
-bool closeGripper(rclcpp::Node::SharedPtr node){
-    return callTriggerService(
-        "/spot_manipulation_driver/close_gripper",
-        node
-    );
+bool closeGripper(){
+    return callTriggerService("/spot_manipulation_driver/close_gripper");
 }
 
-bool stowArm(rclcpp::Node::SharedPtr node){
-    return callTriggerService(
-        "/spot_manipulation_driver/stow_arm",
-        node
-    );
+bool stowArm(){
+    return callTriggerService("/spot_manipulation_driver/stow_arm");
 }
 
 int main(int argc, char* argv[])
@@ -101,8 +88,8 @@ int main(int argc, char* argv[])
     moveit::planning_interface::MoveGroupInterface::Plan plan;
 
     // --- go to mini unstow pose, moveit can't plan from stow due to collisions ---
-    unstowArm(node);
-    if (!unstowArm(node)) {
+    unstowArm();
+    if (!unstowArm()) {
     RCLCPP_WARN(node->get_logger(), "Arm failed to unstow.");
     }
 
@@ -129,20 +116,20 @@ int main(int argc, char* argv[])
         }
  
     // --- define open hand pose, using open_gripper service call---
-    openGripper(node);
-    if (!openGripper(node)) {
+    openGripper();
+    if (!openGripper()) {
     RCLCPP_WARN(node->get_logger(), "Gripper failed to open.");
     }
 
     // --- close hand ---
-    closeGripper(node);
-    if (!closeGripper(node)) {
+    closeGripper();
+    if (!closeGripper()) {
     RCLCPP_WARN(node->get_logger(), "Gripper failed to close.");
     }   
 
     // --- stow arm ---
-    stowArm(node);
-    if (!stowArm(node)) {
+    stowArm();
+    if (!stowArm()) {
     RCLCPP_WARN(node->get_logger(), "Arm failed to stow.");
     }   
 
