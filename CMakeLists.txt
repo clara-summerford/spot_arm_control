@@ -12,7 +12,7 @@ find_package(moveit_ros_planning_interface REQUIRED)
 find_package(std_msgs REQUIRED)
 
 add_executable(pick_ball src/pick_ball.cpp)
-add_executable(drop_ball src/pick_ball.cpp)
+add_executable(drop_ball src/drop_ball.cpp)
 
 target_include_directories(pick_ball PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

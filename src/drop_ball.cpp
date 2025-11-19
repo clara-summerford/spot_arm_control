@@ -17,8 +17,8 @@
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("spot_moveit");
 
-bool callTriggerService(const std::string &service_name,
-                        rclcpp::Node::SharedPtr caller_logger)
+bool callTriggerService(const std::string &service_name)
+                        // rclcpp::Node::SharedPtr caller_logger)
 {
     // separate node for the service client
     auto temp_node = std::make_shared<rclcpp::Node>("temp_service_client");
@@ -63,6 +63,10 @@ bool stowArm(){
     return callTriggerService("/spot_manipulation_driver/stow_arm");
 }
 
+bool unstowArm(){
+    return callTriggerService("/spot_manipulation_driver/unstow_arm");
+}
+
 int main(int argc, char* argv[])
 {
     rclcpp::init(argc, argv);
@@ -94,9 +98,9 @@ int main(int argc, char* argv[])
     }
 
     // --- subscribe to nav goal pose (maybe not needed for drop) ---
-    // geometry_msgs::msg::PoseStamped target_pose;
+    geometry_msgs::msg::PoseStamped target_pose;
     // auto pose_sub = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-    //     "/target_pose_topic", 10,
+    //     "/ball/stable/pose", 10,
     //     [&target_pose](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     //     {target_pose = *msg;}
     //     );

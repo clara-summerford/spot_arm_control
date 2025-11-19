@@ -99,19 +99,20 @@ int main(int argc, char* argv[])
     geometry_msgs::msg::Pose carry_pose = move_group.getCurrentPose().pose;
 
     // --- subscribe to nav goal pose ---
-    geometry_msgs::msg::Pose target_pose; // might need to be PoseStamped for sub
-    // auto pose_sub = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-    //     "/target_pose_topic", 10,
-    //     [&target_pose](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
-    //     {target_pose = *msg;}
-    //     );
+    geometry_msgs::msg::PoseStamped raw_target_pose; // might need to be PoseStamped for sub
+    auto pose_sub = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+        "/ball_stable_pose", 10,
+        [&raw_target_pose](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+        {raw_target_pose = *msg;}
+        );
 
     // creating fake target_pose coordinates for testing
-    target_pose.position.x = 0.3; 
-    target_pose.position.y = 0.0; 
-    target_pose.position.z = 0.1;
+    // target_pose.position.x = 0.8; 
+    // target_pose.position.y = 0.0; 
+    // target_pose.position.z = 0.05;
 
     // change target pose orientation to be sideways for the gripper
+    geometry_msgs::msg::Pose target_pose = raw_target_pose.pose;
     target_pose.orientation.x = 0.7221369743347168; 
     target_pose.orientation.y = -0.003546650754287839; 
     target_pose.orientation.z = 0.002715529641136527;
