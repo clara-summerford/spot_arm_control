@@ -99,20 +99,25 @@ int main(int argc, char* argv[])
     geometry_msgs::msg::Pose carry_pose = move_group.getCurrentPose().pose;
 
     // --- subscribe to nav goal pose ---
-    geometry_msgs::msg::PoseStamped raw_target_pose; // might need to be PoseStamped for sub
-    auto pose_sub = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/ball_stable_pose", 10,
-        [&raw_target_pose](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
-        {raw_target_pose = *msg;}
-        );
+    // geometry_msgs::msg::PoseStamped raw_target_pose; // might need to be PoseStamped for sub
+    // auto pose_sub = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+    //     "/ball_stable_pose", 10,
+    //     [&raw_target_pose](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+    //     {raw_target_pose = *msg;}
+    //     );
 
     // creating fake target_pose coordinates for testing
-    // target_pose.position.x = 0.8; 
+    geometry_msgs::msg::Pose target_pose = carry_pose;
+    // target_pose.position.x = 2.82; 
+    // target_pose.position.y = -5.75; 
+    // target_pose.position.z = 0.33;
+
+    // target_pose.position.x = 0.3; 
     // target_pose.position.y = 0.0; 
-    // target_pose.position.z = 0.05;
+    // target_pose.position.z = 0.1;
 
     // change target pose orientation to be sideways for the gripper
-    geometry_msgs::msg::Pose target_pose = raw_target_pose.pose;
+    // geometry_msgs::msg::Pose target_pose = raw_target_pose.pose;
     target_pose.orientation.x = 0.7221369743347168; 
     target_pose.orientation.y = -0.003546650754287839; 
     target_pose.orientation.z = 0.002715529641136527;
@@ -121,9 +126,10 @@ int main(int argc, char* argv[])
     // --- define approach pose ---
     geometry_msgs::msg::Pose approach_pose = target_pose; // for real case
     // geometry_msgs::msg::Pose approach_pose = carry_pose; // for testing without nav goal topic
-    approach_pose.position.x -= 0.09; // roughly 3.5 in
+    approach_pose.position.x += 0.1; // roughly 3.5 in
 
     move_group.setPoseTarget(approach_pose);
+
     if (move_group.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS) {
         move_group.execute(plan);
         RCLCPP_INFO(LOGGER, "Moved to approach pose.");
@@ -132,7 +138,7 @@ int main(int argc, char* argv[])
             return 1;
         }
  
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // --- define open hand pose, using open_gripper service call---
     openGripper();
@@ -140,7 +146,7 @@ int main(int argc, char* argv[])
     RCLCPP_WARN(node->get_logger(), "Gripper failed to open.");
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // --- approach ball, go to given target pose ---
     move_group.setPoseTarget(target_pose);
@@ -152,7 +158,7 @@ int main(int argc, char* argv[])
             return 1;
         }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // --- close hand --- 
     closeGripper();
@@ -160,7 +166,7 @@ int main(int argc, char* argv[])
     RCLCPP_WARN(node->get_logger(), "Gripper failed to close.");
     }   
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // --- pick up ball and move arm up ---
     carry_pose.orientation = approach_pose.orientation;

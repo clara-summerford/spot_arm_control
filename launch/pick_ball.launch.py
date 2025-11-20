@@ -30,9 +30,9 @@ def generate_launch_description():
         *launch_args,
         GroupAction(
             actions=[
-                SetRemap(src='/joint_states', dst='/spot_driver/joint_states'),
-                # SetRemap(src='/spot_moveit/robot_description', dst='/spot_driver/robot_description'),
-                # PushRosNamespace('spot_moveit'),
+                PushRosNamespace('spot_moveit'), #prev commented
+                SetRemap(src='joint_states', dst='/spot_driver/joint_states'),
+                SetRemap(src='robot_description', dst='/spot_driver/robot_description'), #prev commented
                 # SetParameter(name="octomap_resolution", value=0.03),
                 # SetParameter(name="octomap_frame", value="spot_nav/map"),
                 Node(
