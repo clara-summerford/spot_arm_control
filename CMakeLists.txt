@@ -12,6 +12,7 @@ find_package(moveit_ros_planning_interface REQUIRED)
 find_package(std_msgs REQUIRED)
 
 add_executable(pick_ball src/pick_ball.cpp)
+add_executable(demo_pick_ball src/pick_ball.cpp)
 add_executable(drop_ball src/drop_ball.cpp)
 
 target_include_directories(pick_ball PUBLIC
@@ -27,6 +28,12 @@ ament_target_dependencies(
   "moveit_ros_planning_interface"
 )
 ament_target_dependencies(
+  demo_pick_ball
+  "rclcpp"
+  "std_msgs"
+  "moveit_ros_planning_interface"
+)
+ament_target_dependencies(
   drop_ball
   "rclcpp"
   "std_msgs"
@@ -34,6 +41,8 @@ ament_target_dependencies(
 )
 
 install(TARGETS pick_ball
+  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS demo_pick_ball
   DESTINATION lib/${PROJECT_NAME})
 install(TARGETS drop_ball
   DESTINATION lib/${PROJECT_NAME})
