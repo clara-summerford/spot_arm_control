@@ -74,19 +74,19 @@ public:
         return false;
     }
 
-    bool openGripper()
+    void openGripper()
     {
-        return callTriggerService("/spot_manipulation_driver/open_gripper");
+        callTriggerService("/spot_manipulation_driver/open_gripper");
     }
 
-    bool closeGripper()
+    void closeGripper()
     {
-        return callTriggerService("/spot_manipulation_driver/close_gripper");
+        callTriggerService("/spot_manipulation_driver/close_gripper");
     }
 
-    bool unstowArm()
+    void unstowArm()
     {
-        return callTriggerService("/spot_manipulation_driver/mini_unstow_arm");
+        callTriggerService("/spot_manipulation_driver/mini_unstow_arm");
     }
 
     geometry_msgs::msg::Pose rotatePoseRoll90(const geometry_msgs::msg::Pose &pose_body)
@@ -138,13 +138,11 @@ public:
 
     bool executePickAndPlace()
     {
-        // // Step 1: Unstow arm
-        // RCLCPP_INFO(LOGGER, "Step 1: Unstowing arm...");
-        // if (!unstowArm()) {
-        //     RCLCPP_ERROR(LOGGER, "Failed to unstow arm");
-        //     return false;
-        // }
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        // Step 1: Unstow arm
+        RCLCPP_INFO(LOGGER, "Step 1: Unstowing arm...");
+        unstowArm();
+       
+        std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Save carry pose
         geometry_msgs::msg::Pose carry_pose = move_group_->getCurrentPose().pose;
@@ -167,41 +165,34 @@ public:
         // Step 3: Move to approach pose (10cm back from target)
         RCLCPP_INFO(LOGGER, "Step 3: Moving to approach pose...");
         geometry_msgs::msg::Pose approach_pose = target_pose.pose;
-        approach_pose.position.x -= 0.1;
-        if (!moveToPose(approach_pose, "approach")) {
-            return false;
-        }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        approach_pose.position.x -= 0.05;
+        approach_pose.position.y += 0.03;
+
+        moveToPose(approach_pose, "approach");
+        std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Step 4: Open gripper
         RCLCPP_INFO(LOGGER, "Step 4: Opening gripper...");
-        if (!openGripper()) {
-            RCLCPP_ERROR(LOGGER, "Failed to open gripper");
-            return false;
-        }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        openGripper();
+
+        std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Step 5: Move to grasp pose
         RCLCPP_INFO(LOGGER, "Step 5: Moving to grasp pose...");
-        if (!moveToPose(target_pose.pose, "grasp")) {
-            return false;
-        }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        target_pose.pose.position.y += 0.03;
+        target_pose.pose.position.x += 0.03;
+        moveToPose(target_pose.pose, "grasp");
+
+        std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Step 6: Close gripper
         RCLCPP_INFO(LOGGER, "Step 6: Closing gripper...");
-        if (!closeGripper()) {
-            RCLCPP_ERROR(LOGGER, "Failed to close gripper");
-            return false;
-        }
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        closeGripper();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
 
         // Step 7: Return to carry pose
         RCLCPP_INFO(LOGGER, "Step 7: Moving to carry pose...");
-        carry_pose.orientation = target_pose.pose.orientation;
-        if (!moveToPose(carry_pose, "carry")) {
-            return false;
-        }
+        moveToPose(carry_pose, "carry");
 
         RCLCPP_INFO(LOGGER, "Pick and place completed successfully!");
         return true;
@@ -260,7 +251,7 @@ private:
         }
     }
 
-    bool moveToPose(const geometry_msgs::msg::Pose &target_pose, const std::string &pose_name)
+    void moveToPose(const geometry_msgs::msg::Pose &target_pose, const std::string &pose_name)
     {
         moveit::planning_interface::MoveGroupInterface::Plan plan;
         move_group_->setPoseTarget(target_pose);
@@ -275,14 +266,13 @@ private:
             RCLCPP_INFO(LOGGER, "Plan successful, executing...");
             if (move_group_->execute(plan) == moveit::core::MoveItErrorCode::SUCCESS) {
                 RCLCPP_INFO(LOGGER, "Successfully moved to %s pose", pose_name.c_str());
-                return true;
+                // return true;
             } else {
                 RCLCPP_ERROR(LOGGER, "Execution failed for %s pose", pose_name.c_str());
-                return false;
+                // return false;
             }
         } else {
             RCLCPP_ERROR(LOGGER, "Planning failed for %s pose", pose_name.c_str());
-            return false;
         }
     }
 
