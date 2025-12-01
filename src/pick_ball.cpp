@@ -74,18 +74,15 @@ public:
         return false;
     }
 
-    void openGripper()
-    {
+    void openGripper() {
         callTriggerService("/spot_manipulation_driver/open_gripper");
     }
 
-    void closeGripper()
-    {
+    void closeGripper() {
         callTriggerService("/spot_manipulation_driver/close_gripper");
     }
 
-    void unstowArm()
-    {
+    void unstowArm() {
         callTriggerService("/spot_manipulation_driver/mini_unstow_arm");
     }
 

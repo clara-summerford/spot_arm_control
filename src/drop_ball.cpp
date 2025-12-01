@@ -19,16 +19,6 @@
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("spot_moveit");
 
-// given pose:
-//     x: 1.329521100776783
-//     y: -0.2409192440021165
-//     z: 0.0
-//   orientation:
-//     x: 0.0
-//     y: 0.0
-//     z: 0.7024920656934371
-//     w: 0.7116915747975155
-
 class SpotManipulator
 {
 public:
@@ -84,23 +74,19 @@ public:
         return false;
     }
 
-    void openGripper()
-    {
+    void openGripper() {
         callTriggerService("/spot_manipulation_driver/open_gripper");
     }
 
-    void closeGripper()
-    {
+    void closeGripper() {
         callTriggerService("/spot_manipulation_driver/close_gripper");
     }
 
-    void unstowArm()
-    {
+    void unstowArm() {
         callTriggerService("/spot_manipulation_driver/mini_unstow_arm");
     }
 
-    void stowArm()
-    {
+    void stowArm() {    
         callTriggerService("/spot_manipulation_driver/stow_arm");
     }
 
@@ -153,64 +139,35 @@ public:
 
     bool executePickAndPlace()
     {
-        // Step 1: unstow arm
-        RCLCPP_INFO(LOGGER, "Step 1: unstow...");
+        // Step 1: Unstow arm
+        RCLCPP_INFO(LOGGER, "Step 1: Unstow arm...");
         unstowArm();
-
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        // step 2: save current pose
+        // Step 2: Save current pose (to rotate next)
         geometry_msgs::msg::Pose start_pose = move_group_->getCurrentPose().pose;
 
-
-        // step 3: extend current pose and move
+        // Step 3: Extend current pose and move
         geometry_msgs::msg::Pose drop_pose = rotatePoseRoll90(start_pose);
-        drop_pose.position.x += 0.6;
+        drop_pose.position.x += 0.6; // values found through trial and error, Spot consistently navigates to left side of tag
         drop_pose.position.y -= 0.2;
         
         RCLCPP_INFO(LOGGER, "Step 3: Moving to drop pose...");
         moveToPose(drop_pose, "drop");
-
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
-        // Step 2: Wait for target pose
-        // RCLCPP_INFO(LOGGER, "Step 2: Waiting for bucket pose...");
-        // if (!waitForPose()) {
-        //     RCLCPP_ERROR(LOGGER, "Failed to receive bucket pose");
-        //     return false;
-        // }
-
-        // geometry_msgs::msg::PoseStamped target_pose = getTargetPose();
-        // RCLCPP_INFO(LOGGER, "Target pose received: x=%.3f y=%.3f z=%.3f",
-        //             target_pose.pose.position.x,
-        //             target_pose.pose.position.y,
-        //             target_pose.pose.position.z);
-
-        // Step 3: Move to approach pose (10cm back from target)
-        // RCLCPP_INFO(LOGGER, "Step 3: Moving to target pose...");
-        // moveToPose(target_pose.pose, "target");
-        // std::this_thread::sleep_for(std::chrono::seconds(5));
-
-        // // step 4 rotate grasp
-        // RCLCPP_INFO(LOGGER, "Step 4: rotating drop pose...");
-        // drop_pose.pose = rotatePoseRoll90(target_pose.pose)
-        // RCLCPP_INFO(LOGGER, "Step 5: Moving to grasp pose...");
-        // moveToPose(drop_pose, "drop");
-
-
-        // Step 5: Open gripper
-        RCLCPP_INFO(LOGGER, "Step 5: Opening gripper...");
+        // Step 4: Open gripper
+        RCLCPP_INFO(LOGGER, "Step 4: Opening gripper...");
         openGripper();
-
         std::this_thread::sleep_for(std::chrono::seconds(3));
 
-        // Step 6: Close gripper
-        RCLCPP_INFO(LOGGER, "Step 6: Closing gripper...");
+        // Step 5: Close gripper
+        RCLCPP_INFO(LOGGER, "Step 5: Closing gripper...");
         closeGripper();
         std::this_thread::sleep_for(std::chrono::seconds(5));
 
-        // Step 7: Return to stow
-        RCLCPP_INFO(LOGGER, "Step 7: Moving to stow pose...");
+        // Step 6: Return to stow
+        RCLCPP_INFO(LOGGER, "Step 6: Moving to stow pose...");
         stowArm();
 
         RCLCPP_INFO(LOGGER, "Pick and place completed successfully!");
@@ -227,7 +184,7 @@ private:
                     msg->pose.position.z);
 
         try {
-            // Create a copy with current time (other timing fix)
+            // Create a copy with current time
             geometry_msgs::msg::PoseStamped msg_copy = *msg;
             msg_copy.header.stamp = node_->now();  // Use current time
 
